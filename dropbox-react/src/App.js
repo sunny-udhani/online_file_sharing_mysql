@@ -5,20 +5,35 @@ import SignUp from "./components/SignUp"
 import Login from "./components/Login";
 import Home from "./components/Home";
 import * as API from './api/API';
-import Logout from "./components/Logout";
-import RequireAuth from "./components/RequireAuth";
-import createBrowserHistory from 'history/createBrowserHistory'
-
-const history = createBrowserHistory();
-
 class App extends Component {
+    constructor(props) {
+        super(props);
+        this.state = {
+            isLoggedIn: false,
+            username: '',
+            path: ""
+        };
+    }
 
-    state = {
-        isLoggedIn: false,
-        username: ''
-    };
+    setPath = (path, type, name) => {
+        if (type === 1){
+            path = path + "/" + name;
+        }
+        if (name === ".."){
+            path = path.substring(0, path.lastIndexOf('/'));
+        }
+        console.log(path);
+        if (path === this.state.path){
+            console.log("no change in path")
+        }else{
+            this.setState({
+                ...this.state,
+                path: path
+            });
+        }
+    }
 
-     getCookie = (cname) => {
+    getCookie = (cname) => {
         var name = cname + "=";
         var decodedCookie = decodeURIComponent(document.cookie);
         var ca = decodedCookie.split(';');
@@ -98,9 +113,27 @@ class App extends Component {
             })
     };
 
-    handleSubmitUpload = (file) => {
-        console.log("upload");
+    handleCreateDirectory = (dir) => {
+        API.doMakeDirectory(dir)
+            .then((res) => {
+                console.log("res status" + res.status)
+                if (res.status === 200) {
+                    this.setState({
+                        isLoggedIn: false,
+                        message: "Directory created"
+                    });
+                }else{
+                    if (res.status === 400) {
+                        console.log("no directory created");
+                    }
+                }
+            })
+            .catch ((err) =>{
+                console.log(err);
+            })
+    };
 
+    handleSubmitUpload = (file) => {
         API.doFileUpload(file)
             .then((status) => {
                 console.log("res status " +status);
@@ -124,7 +157,7 @@ class App extends Component {
                 <Route exact path="/" component = { () =>  <SignUp handleSubmit = {this.handleSubmit}/> } />
                 <Route exact path="/login" component = { () =>  <Login handleSubmit = {this.handleSubmitLogin}/>} />
                 {/*<Route component = { (props) =>  <RequireAuth {...props} isLoggedIn = {this.state.isLoggedIn}/>} >*/}
-                <Route exact path="/home" component = {() => <Home handleSubmitLogout={this.handleSubmitLogout} handleSubmitUpload={this.handleSubmitUpload}/>}></Route>
+                <Route exact path="/home" component = {() => <Home path = {this.state.path} handleSetPath = {this.setPath} handleSubmitLogout={this.handleSubmitLogout} handleCreateDirectory={this.handleCreateDirectory} handleSubmitUpload={this.handleSubmitUpload}/>}></Route>
                 {/*</Route>*/}
             </Switch>
         );

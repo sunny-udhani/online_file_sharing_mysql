@@ -50,7 +50,7 @@ app.use(session({
     cookieName: "aaj",
     duration: 60*60*1000,
     secret: "aaj",
-    activeDuration: 5*60*1000
+    activeDuration: 50*60*1000
 }));
 
 // uncomment after placing your favicon in /public
@@ -68,7 +68,8 @@ app.post('/checkLogin', dropboxController.validateLogin);
 app.post('/logout', dropboxController.logout);
 app.post('/fileUpload', dropboxController.fileUpload);
 app.post('/listFiles', dropboxController.listFiles);
-
+app.post('/makeDirectory', dropboxController.makeDirectory);
+app.post('/setUploadPath', dropboxController.setUploadPath);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

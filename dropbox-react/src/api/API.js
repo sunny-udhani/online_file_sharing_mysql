@@ -54,6 +54,23 @@ export const doLogout = () =>
             return error;
         });
 
+export const doMakeDirectory = (dir) =>
+    fetch(`${api}/makeDirectory`, {
+        method: 'POST',
+        credentials:'include',
+        headers: {
+            ...headers,
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(dir)
+    }).then(res => {
+        return res;
+    })
+        .catch(error => {
+            console.log("This is error");
+            return error;
+        });
+
 
 export const doFileUpload = (payload) =>
     fetch(`${api}/fileUpload`, {
@@ -69,13 +86,35 @@ export const doFileUpload = (payload) =>
     });
 
 
-export const doListFiles = () =>
+export const doListFiles = (payload) =>
     fetch(`${api}/listFiles`, {
         method: 'POST',
         credentials: 'include',
+        headers: {
+            ...headers,
+            'Content-Type': 'application/json'
+        },
+        body :  JSON.stringify(payload)
     }).then(res => {
         console.log(res.status);
-        return res.json();
+        return res;
+    }).catch(error => {
+        console.log("This is error");
+        return error;
+    });
+
+export const doSetUploadPath = (payload) =>
+    fetch(`${api}/setUploadPath`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+            ...headers,
+            'Content-Type': 'application/json'
+        },
+        body :  JSON.stringify(payload)
+    }).then(res => {
+        console.log(res.status);
+        return res;
     }).catch(error => {
         console.log("This is error");
         return error;

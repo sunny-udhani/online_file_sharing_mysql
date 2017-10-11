@@ -7,13 +7,18 @@ var fs = require('fs');
 var multer = require('multer');
 var glob = require('glob');
 var dirTree = require('directory-tree');
+var async = require("async");
 var fileName = "";
-
+var self = this;
+var uploadPath = "";
 var storage = multer.diskStorage({
     destination: function (req, file, cb) {
-        cb(null, ('./'+ req.aaj.username))
+        console.log("dest")
+        console.log(uploadPath);
+        cb(null, ('./'+ uploadPath))
     },
     filename: function (req, file, cb) {
+
         console.log("file details: "+ JSON.stringify(file));
         fileName += file.originalname+"/";
         cb(null, file.originalname)
@@ -122,8 +127,8 @@ exports.logout = function(req, res){
 
 };
 
-validateFolderExists = function (id,callback) {
-    var dir = './' + id;
+validateFolderExists = function (path,callback) {
+    var dir = './' + path;
 
     if (!fs.existsSync(dir)){
         callback(400)
@@ -135,6 +140,7 @@ validateFolderExists = function (id,callback) {
 exports.fileUpload = function (req, res) {
     // console.log(req.aaj.username);
     // console.log("req body: "+JSON.stringify(req.body));
+
     if (req.aaj.username !== undefined || req.aaj.username !== "") {
         upload(req,res, function (err) {
             if(err) {
@@ -142,11 +148,11 @@ exports.fileUpload = function (req, res) {
                 res.status(400).send();
             }
             else{
-                console.log(fileName);
-                mysqlDAO.saveFileDetails(req.aaj.username,fileName, function (result) {
 
-                        res.status(result).send();
-                        fileName = "";
+                console.log(fileName);
+                mysqlDAO.saveFileDetails(req.aaj.username, fileName, uploadPath, function (result) {
+                    res.status(result).send();
+                    fileName = "";
 
                 })
             }
@@ -161,24 +167,124 @@ exports.listFiles = function (req, res) {
     if (req.aaj.username !== undefined || req.aaj.username !== "") {
         validateFolderExists(req.aaj.username, function (folderExists) {
             if(folderExists === 200){
-                mysqlDAO.listUserFiles(req.aaj.username, function (err,results) {
-                    if(err){
-                        res.status(400).end();
+                var path = req.param("path");
+                if(path === "" || path === undefined){
+                    path = "./" + req.aaj.username;
+                }
+                validateFolderExists(path, function (folderExists) {
+                    if(folderExists === 200) {
+                        mysqlDAO.getUserDetails(req.aaj.username, function (err, userResults) {
+                            if (err) {
+                            } else {
+                                if (userResults.length === 1) {
+                                    var userID = userResults[0].userId;
+                                    mysqlDAO.listUserFilesRelation(userID, function (err, relations) {
+                                        if (err) {
+                                        } else {
+                                            if (relations.length !== 0) {
+                                                var fileList = [{}];
+                                                console.log("relation len: " + relations.length);
+                                                async.forEachOf(relations, function(relation, index, callback){
+                                                    mysqlDAO.listUserFileDetails(relation.userfile_fileID, path, function (err, fileDetails) {
+                                                        fileList[0] = {name: "..", path: path};
+                                                        if (fileDetails.length === 1) {
+                                                            if (fileDetails[0].fileName !== "") {
+                                                                fileList[index + 1] = {
+                                                                    name: fileDetails[0].fileName,
+                                                                    createDt: fileDetails[0].fileCreatedDt,
+                                                                    id: fileDetails[0].fileDetailsID,
+                                                                    path: fileDetails[0].filePath,
+                                                                    type: fileDetails[0].fileType
+                                                                };
+                                                            }
+                                                        }
+                                                        callback();
+                                                    })
+                                                }, function(err){
+                                                    console.log(fileList);
+                                                    res.status(200).send(fileList)
+                                                });
+                                            }
+                                        }
+                                    })
+                                }
+                            }
+                        })
                     }else{
-                        if(results.length > 0){
-                            res.status(200).send(results);
-                        }else{
-                            console.log("no files yet");
-                            res.status(200).end();
-                        }
+                        console.log("no such folder")
                     }
                 })
-            }else{
-                res.status(400).end();
             }
-        });
-    }
-    else {
-        console.log("no session")
+        })
     }
 };
+
+exports.makeDirectory = function (req, res) {
+    if(req.aaj.username !== undefined || req.aaj.username !== ""){
+        console.log(req);
+        var path = req.param('path');
+        var dir = req.param('dir');
+        if(path === "" || path === undefined){
+            path = "./"+req.aaj.username;
+        }
+        var createPath = path + '/' + dir;
+        fs.mkdirSync(createPath);
+        if (!fs.existsSync(createPath)){
+            res.status(400).end();
+        }else{
+            mysqlDAO.saveFolder(req.aaj.username,path,req.param('dir'),function (results) {
+                if(results === 200) res.status(200).send();
+            })
+        }
+    }else{
+        res.status(400).end();
+    }
+}
+
+exports.setPath = function (req, res) {
+    if(req.aaj.username !== undefined || req.aaj.username !== ""){
+        console.log(req);
+        var path = "./"+req.aaj.username +"/" + req.param('path');
+        if (!fs.existsSync(path)){
+            res.status(400).end();
+        }else{
+            self.listFiles()
+        }
+    }else{
+        res.status(400).end();
+    }
+};
+
+exports.setUploadPath = function (req,res) {
+    if (req.aaj.username !== undefined || req.aaj.username !== "") {
+        uploadPath = '';
+        console.log("upload path set");
+        console.log(req.body);
+        uploadPath = req.param('path');
+        res.status(200).end();
+    }
+};
+
+// relations.map(function (relation, index) {
+//         mysqlDAO.listUserFileDetails(relation.userfile_fileID, path, function (err, fileDetails) {
+//             fileList[0] = {name: "..", path: path};
+//             if (fileDetails.length === 1) {
+//                 fileList[index + 1] = {
+//                     name: fileDetails[0].fileName,
+//                     createDt: fileDetails[0].fileCreatedDt,
+//                     id: fileDetails[0].fileDetailsID,
+//                     path: fileDetails[0].filePath
+//                 };
+//                 if (fileList.length === relations.length + 1) {
+//                     console.log("files length: " + fileList.length);
+//                     var results = {
+//                             results: fileList,
+//                             path: "./" + req.aaj.username
+//                         };
+//                     res.status(200).send(results)
+//                 }
+//             }
+//         })
+//
+//     }
+// )

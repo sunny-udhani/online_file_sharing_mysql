@@ -34,9 +34,9 @@ exports.getUserDetails = function(email, callback){
     }, getUser);
 };
 
-exports.insertFileDetails = function(fileID, fileName, callback){
+exports.insertFileDetails = function(fileID, fileName, path, callback){
 
-    var filedetails="insert into filedetails (fileDetailsID, fileName, fileCreatedDt) values ('"+fileID+"', '"+fileName+"', '"+new Date().toISOString().slice(0, 10)+"')";
+    var filedetails="insert into filedetails (fileDetailsID, fileName, fileCreatedDt, filePath, fileType) values ('"+fileID+"', '"+fileName+"', '"+new Date().toISOString().slice(0, 10)+"' , '"+path+"' , '0')";
 
     mysql.saveData(filedetails, function(err,results){
         if (err ) {
@@ -60,7 +60,7 @@ exports.insertUserFileRelation = function(relationID,fileID, userID, callback){
     });
 };
 
-exports.saveFileDetails = function(username,fileNames,callback){
+exports.saveFileDetails = function(username,fileNames, path,callback){
     try{
         this.getUserDetails(username,function (err,result) {
             if(err){
@@ -72,7 +72,7 @@ exports.saveFileDetails = function(username,fileNames,callback){
                     filenameArr.map( function (fileName) {
                         if(fileName !== ""){
                             var pk_Id = uuidv4();
-                            self.insertFileDetails(pk_Id, fileName, function (err,results) {
+                            self.insertFileDetails(pk_Id, fileName, path, function (err,results) {
                                 if(!err){
                                     var relID = uuidv4();
 
@@ -98,49 +98,44 @@ exports.saveFileDetails = function(username,fileNames,callback){
     }
 };
 
-
-exports.listUserFiles = function(username,callback){
-    try{
-        this.getUserDetails(username,function (err,result) {
-            if(err){
-                throw err;
-            }else {
-                if(result.length === 1){
-                    var userID = result[0].userId;
-                    self.listUserFilesRelation(userID,function (err, results) {
-                        if(!err){
-                            if(results.length > 0 ){
-                                var filearr = results.map( function (result) {
-                                    self.listUserFileDetails(result.userfile_fileID, function (err, detailresults) {
-                                        if(!err){
-                                            if(detailresults.length ===1){
-                                                return {name: detailresults.fileName, createDt: detailresults.fileCreatedDt, id: detailresults.fileDetailsID}
-                                            }
-                                        }else{
-                                            callback(err);
-                                        }
-                                    })
-                                })
-                                callback(err,filearr);
-                            }else{
-                                callback(err);
-                            }
-                        }else{
-                            throw err;
-                        }
-                    })
-                }else{
-                    callback(400)
-                }
-            }
-        })
-    }
-    catch(err){
-        console.log(err);
-        callback(400)
-    }
-};
-
+//
+// exports.listUserFiles = function(username,callback){
+//     try{
+//         this.getUserDetails(username,function (err,result) {
+//             if(err){
+//                 throw err;
+//             }else {
+//                 if(result.length === 1){
+//                     var userID = result[0].userId;
+//                     self.listUserFilesRelation(userID,function (err, results) {
+//                         if(!err){
+//                            ) { if(results.length > 0 ){
+//                                     self.listfileDetails(results, function (err, fileList
+//                                     callback(err,fileList);
+//                                 })
+//                             }else{
+//                                 console.log("no results2");
+//
+//                                 throw err
+//                             }
+//                         }else{
+//                             console.log("no results3");
+//
+//                             throw err;
+//                         }
+//                     })
+//                 }else{
+//                     console.log("no results4");
+//                     throw err
+//                 }
+//             }
+//         })
+//     }
+//     catch(err){
+//         console.log(err);
+//         callback(err);
+//     }
+// };
 
 exports.listUserFilesRelation = function(userID,callback){
     var getFileIDs="select userfile_fileID from userfile_relation where userfile_UserID='"+ userID +"'";
@@ -154,10 +149,8 @@ exports.listUserFilesRelation = function(userID,callback){
     }, getFileIDs);
 };
 
-
-exports.listUserFileDetails = function(fileID,callback){
-    var getFileDetails="select * from filedetails where fileDetailsID = '"+ fileID +"' ";
-
+exports.listUserFileDetails = function(fileID, path,callback){
+    var getFileDetails="select * from filedetails where fileDetailsID = '"+ fileID +"' and filePath = '"+path+"'";
     mysql.fetchData(function(err,results){
         if (err ) {
             throw err;
@@ -166,3 +159,49 @@ exports.listUserFileDetails = function(fileID,callback){
         }
     }, getFileDetails);
 };
+
+exports.saveFolder = function(username,path,dirName,callback){
+    try{
+        this.getUserDetails(username,function (err,result) {
+            if(err){
+                throw err;
+            }else {
+                if(result.length === 1){
+                    var userID = result[0].userId;
+                        if(dirName !== "" && path !== ""){
+                            var pk_Id = uuidv4();
+                            self.insertFolder(pk_Id, dirName, path, function (err,results) {
+                                if(!err){
+                                    var relID = uuidv4();
+                                    self.insertUserFileRelation(relID, pk_Id, userID, function (err,results1) {
+                                        if(!err)callback(200);
+                                        else callback(400);
+                                    })
+                                }else {
+                                    callback(400)
+                                }
+                            })
+                        }
+                }else{
+                    callback(400)
+                }
+            }
+        })
+    }
+    catch(err){
+        console.log(err);
+        callback(400)
+    }
+};
+
+exports.insertFolder = function(id,name,path,callback){
+    var folderDet="insert into filedetails (fileDetailsID, fileName, fileCreatedDt, fileType, filePath) values ('"+id+"', '"+name+"', '"+new Date().toISOString().slice(0, 10)+"' , 1, '"+path+"')";
+
+    mysql.saveData(folderDet, function(err,results){
+        if (err ) {
+            throw err;
+        } else {
+            callback(err, results);
+        }
+    });
+}

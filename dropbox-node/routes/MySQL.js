@@ -26,11 +26,9 @@ function fetchData(callback,sqlQuery){
         }
         else
         {	// return err or result
-            console.log("DB Results:"+ JSON.stringify(rows));
             callback(err, rows);
         }
     });
-    console.log("\nConnection closed..");
     connection.end();
 }
 
@@ -45,11 +43,9 @@ function saveData(query, callback) {
         }
         else
         {	// return err or result
-            console.log("DB Results:" + JSON.stringify(rows));
             callback(err, rows);
         }
     });
-    console.log("\nConnection closed..");
     connection.end();
 
 }
