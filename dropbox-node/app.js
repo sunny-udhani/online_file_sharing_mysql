@@ -70,6 +70,10 @@ app.post('/fileUpload', dropboxController.fileUpload);
 app.post('/listFiles', dropboxController.listFiles);
 app.post('/makeDirectory', dropboxController.makeDirectory);
 app.post('/setUploadPath', dropboxController.setUploadPath);
+app.post('/share', dropboxController.doShare);
+app.post('/getUserDetails', dropboxController.userDetFetch);
+app.post('/userdata', dropboxController.userdata);
+
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

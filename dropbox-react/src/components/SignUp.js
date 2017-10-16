@@ -64,6 +64,21 @@ class SignUp extends Component {
 
                                         </div>
                                         <div className="form-group">
+                                            <label className="control-label" >Education</label>
+                                            <input onChange={ (e) => this.handleChange(e)} type="text" required id="edu" name="edu" className="form-control"/>
+
+                                        </div>
+                                        <div className="form-group">
+                                            <label className="control-label" >Work</label>
+                                            <input onChange={ (e) => this.handleChange(e)} type="text" required id="work" name="work" className="form-control"/>
+
+                                        </div>
+                                        <div className="form-group">
+                                            <label className="control-label" >Interests</label>
+                                            <input onChange={ (e) => this.handleChange(e)} type="text" required id="inter" name="inter" className="form-control"/>
+
+                                        </div>
+                                        <div className="form-group">
                                             <label className="control-label" >Gender</label><br/>
                                             <input onChange={ (e) => this.handleChange(e)} type="radio" id="genderChoice1"
                                                    name="gender" value="male"/>
@@ -84,9 +99,12 @@ class SignUp extends Component {
                                             onClick={() => this.handleSubmitClick()}>
                                             Submit
                                         </button>
-                                        <input type="submit" value="Submit" className="btn btn-success" onClick={() => this.handleSubmitClick()}/>
                                     </fieldset>
                                 </form>
+                            </div>
+                            <div className="col-md-10">
+                                <br/>
+                                <img src = "../../public/logo.png"></img>
                             </div>
                         </div>
                     </div>

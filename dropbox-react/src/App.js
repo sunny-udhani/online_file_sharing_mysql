@@ -5,33 +5,53 @@ import SignUp from "./components/SignUp"
 import Login from "./components/Login";
 import Home from "./components/Home";
 import * as API from './api/API';
+import Profile from "./components/Profile";
 class App extends Component {
     constructor(props) {
         super(props);
         this.state = {
             isLoggedIn: false,
             username: '',
-            path: ""
+            filespath: "",
+            sharepath : ""
         };
     }
 
-    setPath = (path, type, name) => {
+    setFilesPath = (path, type, name) => {
         if (type === 1){
             path = path + "/" + name;
         }
-        if (name === ".."){
+        if (name === ".." && (path !== null || path !== "")){
             path = path.substring(0, path.lastIndexOf('/'));
         }
         console.log(path);
-        if (path === this.state.path){
+        if (path === this.state.filespath){
             console.log("no change in path")
         }else{
             this.setState({
                 ...this.state,
-                path: path
+                filespath: path
             });
         }
-    }
+    };
+
+    setSharedFilesPath = (path, type, name) => {
+        if (type === 1){
+            path = path + "/" + name;
+        }
+        if (name === ".." && (path !== null || path !== "")){
+            path = path.substring(0, path.lastIndexOf('/'));
+        }
+        console.log(path);
+        if (path === this.state.sharepath){
+            console.log("no change in path")
+        }else{
+            this.setState({
+                ...this.state,
+                sharepath: path
+            });
+        }
+    };
 
     getCookie = (cname) => {
         var name = cname + "=";
@@ -80,7 +100,7 @@ class App extends Component {
                     this.setState({...this.state,
                         isLoggedIn: true
                     });
-                     let x = document.cookie;
+                    let x = document.cookie;
                     console.log("username from session storage: " + this.getCookie('aaj'));
                     this.props.history.push("/home");
                 } else if (res.status === 400) {
@@ -151,13 +171,34 @@ class App extends Component {
             })
     };
 
+    handleRedirectProfile = () => {
+        this.props.history.push("/profile");
+    }
+
+    handleShare = (payload) => {
+        API.doShare(payload)
+            .then( res => {
+            if(res.status === 200){
+                this.setState({
+                    ...this.state,
+                    message : "shared successfully"
+                })
+            }
+            })
+            .catch(err => {
+                console.log(err);
+            })
+
+    };
+
     render() {
         return (
             <Switch>
                 <Route exact path="/" component = { () =>  <SignUp handleSubmit = {this.handleSubmit}/> } />
                 <Route exact path="/login" component = { () =>  <Login handleSubmit = {this.handleSubmitLogin}/>} />
                 {/*<Route component = { (props) =>  <RequireAuth {...props} isLoggedIn = {this.state.isLoggedIn}/>} >*/}
-                <Route exact path="/home" component = {() => <Home path = {this.state.path} handleSetPath = {this.setPath} handleSubmitLogout={this.handleSubmitLogout} handleCreateDirectory={this.handleCreateDirectory} handleSubmitUpload={this.handleSubmitUpload}/>}></Route>
+                <Route exact path="/home" component = {() => <Home redirectProfile={ this.handleRedirectProfile} filesPath = {this.state.filespath} sharePath = {this.state.sharepath} handleShare = {this.handleShare} handleSetFilesPath={this.setFilesPath} handleSetSharePath={this.setSharedFilesPath} handleSubmitLogout={this.handleSubmitLogout} handleCreateDirectory={this.handleCreateDirectory} handleSubmitUpload={this.handleSubmitUpload}/>}></Route>
+                <Route exact path="/profile" component = {() => <Profile handleSubmit = {this.handleSubmit} />}></Route>
                 {/*</Route>*/}
             </Switch>
         );

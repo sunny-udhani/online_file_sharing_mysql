@@ -62,6 +62,11 @@ class Login extends Component {
                             <div className="row-fluid">
                                 <button data-toggle="tab"><span className="glyphicon glyphicon-circle-arrow-right"></span>New user?Sign Up</button>
                             </div>
+                            <div className="row col-offset-2">
+                                <div className="panel panel-default">
+                                    <span className="text text-danger">Invalid username / password</span>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>

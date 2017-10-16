@@ -119,3 +119,40 @@ export const doSetUploadPath = (payload) =>
         console.log("This is error");
         return error;
     });
+
+
+
+export const doShare = (payload) =>
+    fetch(`${api}/share`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+            ...headers,
+            'Content-Type': 'application/json'
+        },
+        body :  JSON.stringify(payload)
+    }).then(res => {
+        console.log(res.status);
+        return res;
+    }).catch(error => {
+        console.log("This is error");
+        return error;
+    });
+
+
+
+export const getUserDetail = () =>
+    fetch(`${api}/getUserDetails`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+            ...headers,
+            'Content-Type': 'application/json'
+        }
+    }).then(res => {
+        console.log(res.status);
+        return res;
+    }).catch(error => {
+        console.log("This is error");
+        return error;
+    });

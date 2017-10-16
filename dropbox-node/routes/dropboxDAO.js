@@ -3,10 +3,10 @@ var uuidv4 = require("uuid/v4");
 
 var self = this;
 
-exports.register = function(email, password, fn, ln, dob, gender, callback){
+exports.register = function(email, password, fn, ln, dob, gender, edu, work, inter, callback){
 
     var pk_Id = uuidv4();
-    var sqlQuery = "insert into users (userId, userEmail, userPassword, userFirstName, userLastName, userBDate, userGender) values ('"+pk_Id+"', '"+email+"', '"+password+"', '"+fn+"', '"+ln+"', '"+dob+"', '"+ gender +"')";
+    var sqlQuery = "insert into users (userId, userEmail, userPassword, userFirstName, userLastName, userBDate, userGender, userEducation, userWork, userInterests) values ('"+pk_Id+"', '"+email+"', '"+password+"', '"+fn+"', '"+ln+"', '"+dob+"', '"+ gender +"', '"+ edu +"', '"+ work +"', '"+ inter +"')";
 
     mysql.saveData(sqlQuery, function(err,results) {
 
@@ -150,7 +150,12 @@ exports.listUserFilesRelation = function(userID,callback){
 };
 
 exports.listUserFileDetails = function(fileID, path,callback){
-    var getFileDetails="select * from filedetails where fileDetailsID = '"+ fileID +"' and filePath = '"+path+"'";
+    var getFileDetails= "select * from filedetails where fileDetailsID = '"+ fileID +"' ";
+    if(path === "" || path === undefined || path === null){
+    }else{
+     getFileDetails += " and filePath = '"+path+"'";
+    }
+
     mysql.fetchData(function(err,results){
         if (err ) {
             throw err;
@@ -204,4 +209,41 @@ exports.insertFolder = function(id,name,path,callback){
             callback(err, results);
         }
     });
-}
+};
+
+exports.insertShareDetails = function(fromUserId,toUserId, fileId, callback){
+    var unique_Id = uuidv4();
+    var shareQuery="insert into fileshare (fileShareId, usersId, fileDetailsId, fromUserId) values ('"+unique_Id+"', '"+toUserId+"', '"+fileId+"' , '"+fromUserId+"')";
+
+    mysql.saveData(shareQuery, function(err,results){
+        if (err ) {
+            throw err;
+        } else {
+            callback(err, results);
+        }
+    });
+};
+
+exports.listSharedFilesId = function(userID,callback){
+    var getFileIDs="select fileDetailsId from fileshare where usersId='"+ userID +"'";
+
+    mysql.fetchData(function(err,results){
+        if (err ) {
+            throw err;
+        } else {
+            callback(err, results);
+        }
+    }, getFileIDs);
+};
+
+exports.fetchUser = function (username,callback) {
+    var getUser = "select * from users where userEmail='" + username + "'";
+
+    mysql.fetchData(function (err, results) {
+        if (err ) {
+            throw err;
+        } else {
+            callback(err, results);
+        }
+    }, getUser);
+};
