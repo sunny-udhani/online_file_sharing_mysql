@@ -13,7 +13,7 @@ A web application imitating features of dropbox with React.js, Express, Node.js 
 
 ### Technology stack
 
-![tech-stack](readme-src/tech-stack.jpg)
+![tech-stack](readme-src/tech-stack.png)
 
 <table>
 <thead>
